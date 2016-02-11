@@ -1,0 +1,344 @@
+#ifndef __NPC_LUA__
+#define __NPC_LUA__
+
+#include "npc_lua_interface.h"
+#include "../lua/lua.h"
+#include "../lua/lauxlib.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#define LUA_DATALINE0 0
+#define LUA_DATALINE1 2000
+#define LUA_DATALINE2 4000
+#define LUA_DATALINE3 6000
+#define LUA_DATALINE4 8000
+#define LUA_DATALINE5 10000
+
+typedef struct __CREATEENEMY
+{
+	int EnemyId;
+	int BaseLevel;
+	int SkillType;
+}CREATEENEMY,*PCREATEENEMY;
+
+typedef struct __SCRIPTREGLIB
+{
+	const char *LibName;				//函数库名
+	luaL_reg *FuncRegList;			//需要注册的函数库函数列表
+}SCRIPTREGLIB,*PSCRIPTREGLIB;
+
+typedef struct __SCRIPTREGCLASS
+{
+	const char *ClassName;			//类型名
+	PSCRIPTREGLIB NewLib;				//用于申请类实例的 SCRIPTREGLIB
+	luaL_reg *FuncRegList;			//需要注册的类函数列表
+}SCRIPTREGCLASS,*PSCRIPTREGCLASS;
+
+typedef struct __SCRIPTREGARRAY
+{
+	const char *ArrayName;			//数组名
+	const char **SetMetaTable;	//用于设置数组响应动作
+	const char **SetFuncName;		//用于设置数组响应动作的函数名字
+	PSCRIPTREGLIB FuncList;			//用于响应对应 SetMetaTable 的处理函数列表
+}SCRIPTREGARRAY,*PSCRIPTREGARRAY;
+
+typedef struct __ARRAY_NTINT
+{
+	size_t Size;
+	int Num[1];
+}ARRAY_NTINT,*PARRAY_NTINT;
+
+//创建NPC-返回NPC唯一索引
+int NPC_Lua_Create(const char *_DoFile, const char *_InitFuncName, char *_seek, BOOL _IsFly);
+
+//删除NPC 传入NPC唯一索引
+int NPC_Lua_Del(int _index);
+
+//创建战斗
+int NPC_Lua_CreateVsEnemy(lua_State *_NLL, int _CharaIndex, int _NpcIndex, const char *_DoFunc, PCREATEENEMY _CreateEnemy, int _ARLen, int _Flg);
+
+const char *NPC_Lua_SetErrorStr(const char *ErrStr);
+
+//注册扩展调用接口
+int NPC_Lua_RegCallEx(lua_State * _NLL, luaL_Reg *_RegList);
+//注册扩展函数库接口
+int NPC_Lua_RegLibEx(lua_State * _NLL, PSCRIPTREGLIB _RegLib);
+//注册扩展类接口
+int NPC_Lua_RegClassEx(lua_State * _NLL, PSCRIPTREGCLASS _RegClass);
+//注册扩展数组接口
+int NPC_Lua_RegArrayEx(lua_State * _NLL, PSCRIPTREGARRAY _RegArray);
+
+//扩展类型接口函数
+//NTInt
+int NPC_Lua_NTInt_New(lua_State *_NLL);
+int NPC_Lua_NTInt_Get(lua_State *_NLL);
+int NPC_Lua_NTInt_Set(lua_State *_NLL);
+int NPC_Lua_NTInt_Len(lua_State *_NLL);
+
+//接口函数
+////////////////////////////////////////////////NL/////////////////////////////////////////////////
+int NPC_Lua_NL_GetErrorStr(lua_State *_NLL);						//返回错误信息
+int NPC_Lua_NL_CreateNpc(lua_State *_NLL);							//创建NPC
+int NPC_Lua_NL_DelNpc(lua_State *_NLL);									//删除NPC
+
+////////////////////////////////////////////////NLG////////////////////////////////////////////////
+//功能接口
+int NPC_Lua_NLG_CheckInFront(lua_State *_NLL);					//用于检查某个对象是否在某个对象面前
+int NPC_Lua_NLG_CheckObj(lua_State *_NLL);							//检查某个地图位置是否有对象存在
+int NPC_Lua_NLG_CharLook(lua_State *_NLL);							//设置人物方向(发送更新封包)
+int NPC_Lua_NLG_CreateBattle(lua_State *_NLL);					//创建战斗
+
+int NPC_Lua_NLG_CreateBattlePvP(lua_State *_NLL);
+
+int NPC_Lua_NLG_SearchWatchBattleRandIndex(lua_State *_NLL);
+
+int NPC_Lua_NLG_DelPet(lua_State *_NLL);								//删除指定玩家宠物栏一个或多个宠物
+int NPC_Lua_NLG_DelHaveIndexPet(lua_State *_NLL);
+int NPC_Lua_NLG_DelItem(lua_State *_NLL);								//删除指定玩家道具栏一个或多个宠物
+int NPC_Lua_NLG_DischargeParty(lua_State *_NLL);				//解散 团队
+
+int NPC_Lua_NLG_GivePet(lua_State *_NLL);								//给指定玩家一个或多个宠物
+int NPC_Lua_NLG_GiveItem(lua_State *_NLL);							//给指定玩家一个或多个宠物
+int NPC_Lua_NLG_GiveOneItem(lua_State *_NLL);							//给指定玩家一个道具
+int NPC_Lua_NLG_GiveRandItem(lua_State *_NLL);
+int NPC_Lua_Char_GetOnLinePlayer(lua_State *_NLL);			//获取当前在线人数
+
+int NPC_Lua_NLG_ShowWindowTalked(lua_State *_NLL);			//在指定玩家客户端显示指定内容、类型的对话框
+int NPC_Lua_NLG_SetAction(lua_State *_NLL);							//设置对象的动作
+
+int NPC_Lua_NLG_TalkToCli(lua_State *_NLL);							//普通说话，可以对全服务器人说
+int NPC_Lua_NLG_TalkToFloor(lua_State *_NLL);						//对在某一指定地图内的玩家说话
+
+int NPC_Lua_NLG_UpChar(lua_State *_NLL);								//向NPC周围的玩家发送NPC的数据更新封包
+int NPC_Lua_NLG_UpStateBySecond(lua_State *_NLL);				//向指定玩家发送第2类状态更新封包
+int NPC_Lua_NLG_UpStateByThird(lua_State *_NLL);				//向指定玩家发送第3类状态更新封包
+int NPC_Lua_NLG_Update_Party(lua_State *_NLL);					//向玩家所在的团队成员发送玩家的状态更新封包
+
+int NPC_Lua_NLG_Warp(lua_State *_NLL);									//传送一个对象
+int NPC_Lua_NLG_WalkMove(lua_State *_NLL);							//移动一个对象
+int NPC_Lua_NLG_WatchEntry(lua_State *_NLL);						//观战
+
+int NPC_Lua_NLG_GetMaxPlayNum(lua_State *_NLL);					//获取服务器最大在线数
+int NPC_Lua_NLG_CheckPlayIndex(lua_State *_NLL);				//检查玩家索引是否正常
+
+int NPC_Lua_NLG_Save(lua_State *_NLL);
+
+///////////////////////////////////////////////Char////////////////////////////////////////////////
+//设置数据的接口
+int NPC_Lua_Char_ClrEvtEnd(lua_State *_NLL);						//设置清除结束任务标志
+int NPC_Lua_Char_ClrEvtNow(lua_State *_NLL);						//设置清除正在做任务标志
+int NPC_Lua_Char_ClrEvt(lua_State *_NLL);								//设置清除任务标志
+
+int NPC_Lua_Char_SetEvtEnd(lua_State *_NLL);						//设置任务标志为结束状态
+int NPC_Lua_Char_SetEvtNow(lua_State *_NLL);						//设置任务标志为正在做状态
+int NPC_Lua_Char_SetData(lua_State *_NLL);							//设置Char数据
+
+//事件设置的接口
+int NPC_Lua_Char_SetWalkPreEvent(lua_State *_NLL);			//设置WalkPre事件响应
+int NPC_Lua_Char_SetWalkPostEvent(lua_State *_NLL);			//设置WalkPost事件响应
+int NPC_Lua_Char_SetPreOverEvent(lua_State *_NLL);			//设置PreOver事件响应
+int NPC_Lua_Char_SetPostOverEvent(lua_State *_NLL);			//设置PostOver事件响应
+int NPC_Lua_Char_SetWatchEvent(lua_State *_NLL);				//设置Watch事件响应
+int NPC_Lua_Char_SetLoopEvent(lua_State *_NLL);					//设置Loop事件响应
+int NPC_Lua_Char_SetTalkedEvent(lua_State *_NLL);				//设置Talked事件响应
+int NPC_Lua_Char_SetOFFEvent(lua_State *_NLL);					//设置OFF事件响应
+int NPC_Lua_Char_SetLookedEvent(lua_State *_NLL);				//设置Looked事件响应
+int NPC_Lua_Char_SetItemPutEvent(lua_State *_NLL);			//设置ItemPut事件响应
+int NPC_Lua_Char_SetWindowTalkedEvent(lua_State *_NLL);	//设置WindowTalked事件响应
+#ifdef _USER_CHARLOOPS
+int NPC_Lua_Char_SetCharLoopsEvent(lua_State *_NLL);		//设置CharLoops事件响应
+int NPC_Lua_Char_SetBattleProPertyEvent(lua_State *_NLL);//设置BattleProPerty事件响应
+#endif
+
+//获取数据的接口
+int NPC_Lua_Char_IsEventEnd(lua_State *_NLL);						//检查是否结束的任务标志
+int NPC_Lua_Char_IsEventNow(lua_State *_NLL);						//检查是否正在做的任务标志
+
+int NPC_Lua_Char_FindItemId(lua_State *_NLL);						//搜索指定对象身上是否拥有某道具ID
+int NPC_Lua_Char_FindPetEnemyId(lua_State *_NLL);				//搜索指定对象身上是否拥有宠物Enemy文件的对应ID
+
+int NPC_Lua_Char_GetData(lua_State *_NLL);							//获取Char数据
+int NPC_Lua_Char_GetItemId(lua_State *_NLL);						//获取指定对象身上指定位置的道具ID
+int NPC_Lua_Char_GetPetEnemyId(lua_State *_NLL);				//获取指定对象身上指定位置的宠物Enemy文件的对应ID
+int NPC_Lua_Char_GetItemIndex(lua_State *_NLL);					//获取指定对象身上指定位置的道具索引
+int NPC_Lua_Char_GetPetIndex(lua_State *_NLL);					//获取指定对象身上指定位置的宠物对象索引
+int NPC_Lua_Char_GetTeamIndex(lua_State *_NLL);					//获取队员的对象索引
+int NPC_Lua_Char_VipPoint(lua_State *_NLL);
+int NPC_Lua_Char_HealAll(lua_State *_NLL);
+int NPC_Lua_Char_GetPetSkillId(lua_State *_NLL);
+int NPC_Lua_Char_GetPetSkillName(lua_State *_NLL);
+int NPC_Lua_Char_GetPetSkillMsg(lua_State *_NLL);
+int NPC_Lua_Char_SetPetSkill(lua_State *_NLL);
+///////////////////////////////////////////////Item////////////////////////////////////////////////
+//获取数据的接口
+int NPC_Lua_Item_GetData(lua_State *_NLL);							//获取道具数据
+
+//设置数据的接口
+int NPC_Lua_Item_SetData(lua_State *_NLL);							//获取道具数据
+
+//事件设置的接口
+int NPC_Lua_Item_SetPreOverEvent(lua_State *_NLL);			//设置PreOver事件响应
+int NPC_Lua_Item_SetPostOverEvent(lua_State *_NLL);			//设置PostOver事件响应
+int NPC_Lua_Item_SetWatchEvent(lua_State *_NLL);				//设置Watch事件响应
+int NPC_Lua_Item_SetUseEvent(lua_State *_NLL);					//设置Use事件响应
+int NPC_Lua_Item_SetAttachEvent(lua_State *_NLL);				//设置Attach事件响应
+int NPC_Lua_Item_SetDetachEvent(lua_State *_NLL);				//设置Detach事件响应
+int NPC_Lua_Item_SetDropEvent(lua_State *_NLL);					//设置Drop事件响应
+int NPC_Lua_Item_SetPickUPEvent(lua_State *_NLL);				//设置PickUP事件响应
+#ifdef _Item_ReLifeAct
+int NPC_Lua_Item_SetDieReLifeEvent(lua_State *_NLL);		//设置DieReLife事件响应
+#endif
+
+///////////////////////////////////////////////Obj////////////////////////////////////////////////
+//获取数据的接口
+int NPC_Lua_Obj_GetType(lua_State *_NLL);								//获取OBJ的类型
+/*
+int NPC_Lua_Obj_GetName(lua_State *_NLL);								//获取OBJ的名称
+int NPC_Lua_Obj_GetDIR(lua_State *_NLL);								//获取OBJ的方向
+int NPC_Lua_Obj_GetImageNum(lua_State *_NLL);						//获取OBJ的形象号
+*/
+int NPC_Lua_Obj_GetCharType(lua_State *_NLL);						//获取OBJ对应的Char数据结构的类型
+int NPC_Lua_Obj_GetCharIndex(lua_State *_NLL);					//获取OBJ对应的Char数据结构的索引
+int NPC_Lua_Obj_GetX(lua_State *_NLL);									//获取OBJ的X坐标
+int NPC_Lua_Obj_GetY(lua_State *_NLL);									//获取OBJ的Y坐标
+int NPC_Lua_Obj_GetFloor(lua_State *_NLL);							//获取OBJ所在的地图编号
+//int NPC_Lua_Obj_GetDelTime(lua_State *_NLL);						//获取OBJ的删除时间
+
+int NPC_Lua_Obj_SetType(lua_State *_NLL);								//获取OBJ的类型
+/*
+int NPC_Lua_Obj_SetName(lua_State *_NLL);								//获取OBJ的名称
+int NPC_Lua_Obj_SetDIR(lua_State *_NLL);								//获取OBJ的方向
+int NPC_Lua_Obj_SetImageNum(lua_State *_NLL);						//获取OBJ的形象号
+*/
+int NPC_Lua_Obj_SetCharType(lua_State *_NLL);						//获取OBJ对应的Char数据结构的类型
+int NPC_Lua_Obj_SetX(lua_State *_NLL);									//获取OBJ的X坐标
+int NPC_Lua_Obj_SetY(lua_State *_NLL);									//获取OBJ的Y坐标
+int NPC_Lua_Obj_SetFloor(lua_State *_NLL);							//获取OBJ所在的地图编号
+//int NPC_Lua_Obj_SetDelTime(lua_State *_NLL);						//获取OBJ的删除时间
+
+//////////////////////////////////////////////Battle///////////////////////////////////////////////
+//获取数据的接口
+int NPC_Lua_Battle_GetPlayIndex(lua_State *_NLL);				//获取战斗中的玩家索引
+//设置数据的接口
+int NPC_Lua_Battle_SetNORisk(lua_State *_NLL);					//设置是否开启无风险模式
+int NPC_Lua_Battle_SetMod(lua_State *_NLL);							//设置战斗模式标志
+int NPC_Lua_Battle_SetType(lua_State *_NLL);						//设置战斗类型
+//事件设置的接口
+int NPC_Lua_Battle_SetWinEvent(lua_State *_NLL);				//设置Win事件响应
+
+///////////////////////////////////////////////Other///////////////////////////////////////////////
+int NPC_Lua_GetFuncPoint(lua_State *_NLL);							//获取函数指针
+
+//////////////////////////////////////////////////////////////////////
+#define LRet(r) \
+{ \
+	NPC_Lua_SetErrorStr(NULL); \
+	return r; \
+}
+
+#define LRetErr(c,r) \
+{ \
+	NPC_Lua_SetErrorStr(c); \
+	return r; \
+}
+
+//////////////////////////////////////////////////////////////////////
+//返回一个nil
+#define LRetNull(L) \
+{ \
+	lua_pushnil(L); \
+	LRet(1); \
+}
+
+//返回一个BOOL给LUA引擎
+#define LRetBool(L, b) \
+{ \
+	lua_pushboolean(L, b); \
+	LRet(1); \
+}
+
+//返回一个int给LUA引擎
+#define LRetInt(L, i) \
+{ \
+	lua_pushinteger(L, i); \
+	LRet(1); \
+}
+
+#define LRetMsg(L, c) \
+{ \
+	lua_pushstring(L, c); \
+	LRet(1); \
+}
+////////////////////////////////////////////////////////////////////
+//设置一个错误状态和一个错信息
+#define LRetErrInt(L, i, c) \
+{ \
+	lua_pushinteger(L, i); \
+	LRetErr(c,1); \
+}
+
+//返回一个字符串给LUA引擎
+#define LRetErrNull(L, c) \
+{ \
+	lua_pushnil(L); \
+	LRetErr(c,1); \
+}
+
+//返回一个字符串给LUA引擎
+#define LRetErrMsg(L, c) \
+{ \
+	lua_pushstring(L, c); \
+	LRetErr(c,1); \
+}
+
+//用于检查参数是否足够
+#define CheckEx(L, n) \
+{	\
+	if(lua_gettop(L) != n) \
+	{ \
+		luaL_argerror(L, 1, "参数数量错误"); \
+	} \
+}
+
+#define CheckEx2(L, t, n) \
+{	\
+	if(lua_gettop(L) < (t) || lua_gettop(L) > n) \
+	{ \
+		luaL_argerror(L, 1, "参数数量错误"); \
+	} \
+}
+
+#define CheckIndexNull(L, n) \
+{ \
+	if(lua_isnil((L), (n))) \
+	{ \
+		luaL_argerror((L), 1, "对象索引不能为nil"); \
+	} \
+}
+
+#define CheckBattleIndexNull(L, n) \
+{ \
+	if(lua_isnil((L), (n))) \
+	{ \
+		luaL_argerror((L), 1, "战斗索引不能为nil"); \
+	} \
+}
+
+#define CheckItemIndexNull(L, n) \
+{ \
+	if(lua_isnil((L), (n))) \
+	{ \
+		luaL_argerror((L), 1, "道具索引不能为nil"); \
+	} \
+}
+
+#define CheckObjIndexNull(L, n) \
+{ \
+	if(lua_isnil((L), (n))) \
+	{ \
+		luaL_argerror((L), 1, "物件索引不能为nil"); \
+	} \
+}
+#endif //#ifndef __NPC_LUA__
